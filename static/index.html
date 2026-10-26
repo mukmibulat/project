@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Amazon Sales</title>
+</head>
+<body>
+    <h1>Amazon Sales</h1>
+
+    <h2>Поиск заказа через HashMap</h2>
+    <input type="text" id="orderId" placeholder="Введите OrderID">
+    <button onclick="findOrder()">Найти заказ</button>
+    <pre id="orderResult"></pre>
+
+    <h2>Сумма Quantity через Segment Tree</h2>
+    <input type="number" id="left" placeholder="Начальный индекс">
+    <input type="number" id="right" placeholder="Конечный индекс">
+    <button onclick="getSum()">Посчитать сумму</button>
+    <pre id="sumResult"></pre>
+
+    <h2>Изменение Quantity через Segment Tree</h2>
+    <input type="number" id="pos" placeholder="Индекс">
+    <input type="number" id="value" placeholder="Новое значение">
+    <button onclick="updateQuantity()">Изменить</button>
+    <pre id="updateResult"></pre>
+
+    <script>
+        async function findOrder() {
+            const orderId = document.getElementById('orderId').value;
+            const result = document.getElementById('orderResult');
+
+            try {
+                const response = await fetch(
+                    `/api/hash-map/${encodeURIComponent(orderId)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent = data.detail || 'Заказ не найден';
+                    return;
+                }
+
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+        async function getSum() {
+            const left = document.getElementById('left').value;
+            const right = document.getElementById('right').value;
+            const result = document.getElementById('sumResult');
+
+            try {
+                const response = await fetch(
+                    `/api/segment-tree/sum?left=${left}&right=${right}`
+                );
+
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+        async function updateQuantity() {
+            const pos = document.getElementById('pos').value;
+            const value = document.getElementById('value').value;
+            const result = document.getElementById('updateResult');
+
+            try {
+                const response = await fetch(
+                    `/api/segment-tree/update?pos=${pos}&value=${value}`,
+                    { method: 'PUT' }
+                );
+
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
