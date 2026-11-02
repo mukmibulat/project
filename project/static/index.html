@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Amazon Sales</title>
+</head>
+<body>
+    <h1>Amazon Sales</h1>
+
+    <h2>Поиск заказа через HashMap</h2>
+
+    <input type="text" id="orderId" placeholder="Введите OrderID">
+    <button onclick="findOrder()">Найти заказ</button>
+    <pre id="orderResult"></pre>
+
+
+    <h2>Поиск товара через HashMap</h2>
+
+    <input type="text" id="productId" placeholder="Введите ProductID">
+    <button onclick="findProduct()">Найти товар</button>
+    <pre id="productResult"></pre>
+
+
+    <h2>Сумма Quantity через Segment Tree</h2>
+
+    <input type="number" id="left" placeholder="Начальный индекс">
+    <input type="number" id="right" placeholder="Конечный индекс">
+    <button onclick="getSum()">Посчитать сумму</button>
+    <pre id="sumResult"></pre>
+
+
+    <h2>Изменение Quantity через Segment Tree</h2>
+
+    <input type="number" id="pos" placeholder="Индекс">
+    <input type="number" id="value" placeholder="Новое значение">
+    <button onclick="updateQuantity()">Изменить</button>
+    <pre id="updateResult"></pre>
+
+
+    <h2>Рейтинг товаров через PageRank</h2>
+
+    <button onclick="getPageRank()">Рассчитать рейтинг</button>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Место</th>
+                <th>ProductID</th>
+                <th>PageRank</th>
+            </tr>
+        </thead>
+        <tbody id="pageRankResult"></tbody>
+    </table>
+
+
+    <script>
+        async function findOrder() {
+            const orderId = document.getElementById('orderId').value;
+            const result = document.getElementById('orderResult');
+
+            try {
+                const response = await fetch(
+                    `/api/hash-map/${encodeURIComponent(orderId)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent = data.detail || 'Заказ не найден';
+                    return;
+                }
+
+                result.textContent = JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+
+        async function findProduct() {
+            const productId = document.getElementById('productId').value;
+            const result = document.getElementById('productResult');
+
+            try {
+                const response = await fetch(
+                    `/api/hash-map/product/${encodeURIComponent(productId)}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent = data.detail || 'Товар не найден';
+                    return;
+                }
+
+                result.textContent =
+                    `ProductID: ${data.ProductID}\n` +
+                    `Название: ${data.ProductName}\n` +
+                    `Продано единиц: ${data.total_quantity}\n` +
+                    `Количество заказов: ${data.orders_count}`;
+
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+
+        async function getSum() {
+            const left = document.getElementById('left').value;
+            const right = document.getElementById('right').value;
+            const result = document.getElementById('sumResult');
+
+            try {
+                const response = await fetch(
+                    `/api/segment-tree/sum?left=${left}&right=${right}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent = data.detail || 'Ошибка расчёта';
+                    return;
+                }
+
+                result.textContent = JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+
+        async function updateQuantity() {
+            const pos = document.getElementById('pos').value;
+            const value = document.getElementById('value').value;
+            const result = document.getElementById('updateResult');
+
+            try {
+                const response = await fetch(
+                    `/api/segment-tree/update?pos=${pos}&value=${value}`,
+                    { method: 'PUT' }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent = data.detail || 'Ошибка обновления';
+                    return;
+                }
+
+                result.textContent = JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+
+        async function getPageRank() {
+            const result = document.getElementById('pageRankResult');
+
+            result.innerHTML = '<tr><td colspan="3">Расчёт...</td></tr>';
+
+            try {
+                const response = await fetch('/api/pagerank');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Ошибка расчёта PageRank');
+                }
+
+                result.innerHTML = '';
+
+                data.forEach((product, index) => {
+                    const row = document.createElement('tr');
+
+                    const placeCell = document.createElement('td');
+                    const productCell = document.createElement('td');
+                    const rankCell = document.createElement('td');
+
+                    placeCell.textContent = index + 1;
+                    productCell.textContent = product.ProductID;
+                    rankCell.textContent = product.PageRank.toFixed(6);
+
+                    row.appendChild(placeCell);
+                    row.appendChild(productCell);
+                    row.appendChild(rankCell);
+
+                    result.appendChild(row);
+                });
+
+            } catch (error) {
+                result.innerHTML = '';
+
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+
+                cell.colSpan = 3;
+                cell.textContent = 'Ошибка: ' + error.message;
+
+                row.appendChild(cell);
+                result.appendChild(row);
+            }
+        }
+    </script>
+
+</body>
+</html>
